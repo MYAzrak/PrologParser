@@ -1,0 +1,9 @@
+object(candle,red,small,1).
+object(apple,red,small,1).
+object(apple,green,small,1).
+object(table,blue,big,50).
+location(object(candle,red,small,1), kitchen).
+location(object(apple,red,small,1), kitchen).
+location(object(apple,green,small,1), kitchen).
+location(object(table,blue,big,50), kitchen).
+?- location(object(_name,red,_,_), kitchen).

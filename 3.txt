@@ -1,0 +1,5 @@
+num(0).
+num(s(N)) :- num(N).
+num_plus(0,N,N).
+num_plus(s(M),N,P) :- num_plus(M,s(N),P).
+?- num( s(s(s(0))) ).
