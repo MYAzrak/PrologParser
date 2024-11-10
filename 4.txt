@@ -1,0 +1,7 @@
+say(N, From, To) :- write('move disc '), write(N), write(' from '),
+ write(From), write(' to '), write(To), nl.
+hanoi(N) :- move(N, left, center, right).
+move(0, _, _, _).
+move(N, From, To, Using) :- is(M, N-1), move(M, From, Using, To),
+ say(N, From, To), move(M, Using, To, From).
+?- hanoi(3).
