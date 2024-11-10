@@ -1,9 +1,9 @@
-from Lexical import LexicalAnalyser
+from Lexical import LexicalAnalyzer
 from Errors import ErrorHandler
 
 
-class SyntaxAnalyser:
-    def __init__(self, lexical: LexicalAnalyser, error: ErrorHandler):
+class SyntaxAnalyzer:
+    def __init__(self, lexical: LexicalAnalyzer, error: ErrorHandler):
         self.lex = lexical
         self.err = error
         return
@@ -18,7 +18,7 @@ class SyntaxAnalyser:
         return
 
     def special(self):
-        return self.lex.getChar() in '+-*/\\^~:.? #$&'
+        return self.lex.getChar() in "+-*/\\^~:.? #$&"
 
     def character(self):
         return self.alphanumeric() or self.special()
@@ -26,8 +26,9 @@ class SyntaxAnalyser:
     def alphanumeric(self):
         isAlpha = self.lowercase_char() or self.uppercase_char() or self.digit()
         if not isAlpha:
-            self.err.syntax_error(f"Expected alphanumeric, got "
-                                  f"{self.lex.getChar()}")
+            self.err.syntax_error(
+                f"Expected alphanumeric, got " f"{self.lex.getChar()}"
+            )
 
     def lowercase_char(self):
         return

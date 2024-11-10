@@ -1,4 +1,4 @@
-class LexicalAnalyser:
+class LexicalAnalyzer:
     def __init__(self, program):
         self.line = 0
         self.position = 0
@@ -8,16 +8,16 @@ class LexicalAnalyser:
         return self.input_lines[self.line][self.position]
 
     def nextChar(self):
-
-        if self.position < len(self.input_lines[self.line])-1:
+        if self.position < len(self.input_lines[self.line]) - 1:
             self.position += 1
         else:
             self.line += 1
             self.position = 0
 
         if self.line >= len(self.input_lines):
-            return ''
+            return ""
         else:
-            if self.getChar() == '\n':
+            if self.getChar() == "\n":
                 return self.nextChar()
+
         return self.getChar()
