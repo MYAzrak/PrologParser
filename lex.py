@@ -30,12 +30,19 @@ class LexicalAnalyzer:
         self.nextChar = ""
         self.nextToken = 0
         self.lexLen = 0
-        self.token = 0
+        self.line = 1
+        self.column = 1
 
     def getChar(self, input_string, position):
         """Gets the next character of input and determine its character class"""
         if position < len(input_string):
             self.nextChar = input_string[position]
+
+            if self.nextChar == "\n":
+                self.line += 1
+                self.column = 1
+            else:
+                self.column += 1
 
             # Determine character class
             if self.nextChar.isupper() or self.nextChar == "_":  # <uppercase-char>
@@ -116,8 +123,26 @@ class LexicalAnalyzer:
                 self.nextToken = Token.NUMERAL
 
             case Token.UNKNOWN:
+                # Handle strings
+                if self.nextChar == "'":
+                    self.addChar()  # Add opening quote
+                    position = self.getChar(input_string, position)
+                    while self.nextChar != "'" and self.charClass != Token.EOF:
+                        self.addChar()
+                        position = self.getChar(input_string, position)
+                    if self.nextChar == "'":
+                        self.addChar()  # Add closing quote
+                        position = self.getChar(input_string, position)
+                        self.nextToken = Token.STRING
+                    else:
+                        # Unterminated string error
+                        print(
+                            f"Unterminated string at line {self.line}, column {self.column}",
+                            position,
+                        )
+
                 # Handle special two-character tokens and other special characters
-                if (
+                elif (
                     self.nextChar == "?"
                     and position < len(input_string)
                     and input_string[position] == "-"
@@ -152,14 +177,3 @@ class LexicalAnalyzer:
             f"Next token is: {self.nextToken}, Next lexeme is {''.join(self.lexeme[:self.lexLen])}"
         )
         return position, self.nextToken
-
-
-# Example usage
-def analyze(lex_analyzer, input_string):
-    position = 0
-    position = lex_analyzer.getChar(input_string, position)
-
-    while True:
-        position, token = lex_analyzer.lex(input_string, position)
-        if token == Token.EOF:
-            break
