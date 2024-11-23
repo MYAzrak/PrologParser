@@ -28,7 +28,9 @@ class SyntaxAnalyzer:
             char = self.lex.getChar()
         return True
 
-    def clause(self):   # was getting an error here, I think my white-space logic is wrong?
+    def clause(
+        self,
+    ):  # was getting an error here, I think my white-space logic is wrong?
         if not self.predicate():
             self.err.syntax_error("Expected a predicate in clause.")
             return False
@@ -140,7 +142,128 @@ class SyntaxAnalyzer:
         return False
 
     def atom(self):
-        pass
+        """<atom> -> <small-atom> | ' <string> '"""
+        char = self.lex.getChar()
+        if char == "'":
+            # Handle quoted string
+            self.lex.nextChar()  # consume opening quote
+            if not self.string():
+                return False
+            if self.lex.getChar() != "'":
+                self.err.syntax_error("Expected closing quote for string.")
+                return False
+            self.lex.nextChar()  # consume closing quote
+            return True
+        else:
+            # Handle small-atom
+            return self.small_atom()
 
-    def term_list(self):   # this needs term as well, need to implement that
-        pass
+    def small_atom(self):
+        """<small-atom> -> <lowercase-char> | <lowercase-char> <character-list>"""
+        if not self.lowercase_char():
+            return False
+
+        # Optional character list
+        while self.character_list():
+            continue
+        return True
+
+    def string(self):
+        """<string> -> <character> | <character> <string>"""
+        if not self.character():
+            return False
+
+        # Continue reading characters until we hit a quote or EOF
+        char = self.lex.getChar()
+        while char and char != "'":
+            if not self.character():
+                return False
+            char = self.lex.getChar()
+        return True
+
+    def term_list(self):
+        """<term-list> -> <term> | <term> , <term-list>"""
+        if not self.term():
+            return False
+
+        char = self.lex.getChar()
+        while char == ",":
+            self.lex.nextChar()  # consume comma
+            if not self.term():
+                self.err.syntax_error("Expected term after ','.")
+                return False
+            char = self.lex.getChar()
+        return True
+
+    def term(self):
+        """<term> -> <atom> | <variable> | <structure> | <numeral>"""
+        char = self.lex.getChar()
+
+        if char.isupper() or char == "_":
+            # Handle variable
+            return self.variable()
+        elif char.isdigit():
+            # Handle numeral
+            return self.numeral()
+        else:
+            # Try atom first
+            pos = self.lex.getPosition()
+            if self.atom():
+                next_char = self.lex.getChar()
+                if next_char == "(":
+                    # This is actually a structure
+                    self.lex.setPosition(pos)
+                    return self.structure()
+                return True
+            return False
+
+    def structure(self):
+        """<structure> -> <atom> ( <term-list> )"""
+        if not self.atom():
+            return False
+
+        char = self.lex.getChar()
+        if char != "(":
+            self.err.syntax_error("Expected '(' in structure.")
+            return False
+
+        self.lex.nextChar()  # consume '('
+        if not self.term_list():
+            return False
+
+        if self.lex.getChar() != ")":
+            self.err.syntax_error("Expected ')' in structure.")
+            return False
+
+        self.lex.nextChar()  # consume ')'
+        return True
+
+    def variable(self):
+        """<variable> -> <uppercase-char> | <uppercase-char> <character-list>"""
+        if not self.uppercase_char():
+            return False
+
+        # Optional character list
+        while self.character_list():
+            continue
+        return True
+
+    def lowercase_char(self):
+        """<lowercase-char> -> a | b | c | ... | x | y | z"""
+        char = self.lex.getChar()
+        if char.islower():
+            self.lex.nextChar()
+            return True
+        self.err.syntax_error(f"Expected lowercase character, got '{char}'.")
+        return False
+
+    def uppercase_char(self):
+        """<uppercase-char> -> A | B | C | ... | X | Y | Z | _"""
+        char = self.lex.getChar()
+        if char.isupper() or char == "_":
+            self.lex.nextChar()
+            return True
+        self.err.syntax_error(
+            f"Expected uppercase character or underscore, got '{char}'."
+        )
+        return False
