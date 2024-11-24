@@ -8,13 +8,17 @@ def parse_file(filename):
         with open(filename, "r") as f:
             input_lines = f.readlines()
 
+        print()
         print(f"Parsing {filename}")
         lexical = LexicalAnalyzer(input_lines)
-        error = ErrorHandler()
+        error = ErrorHandler(lexical)
         syntax = SyntaxAnalyzer(lexical, error)
 
-        syntax.parse()
-        error.report_errors()
+        e = syntax.parse()
+        if e:
+            print("Program parsed with no errors")
+        else:
+            error.report_errors()
 
         return True  # File was found and parsed (regardless of errors)
 
