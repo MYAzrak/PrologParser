@@ -5,13 +5,16 @@ class LexicalAnalyzer:
         self.input_lines = program
 
     def getChar(self, keep_space = False):
-        c = self.input_lines[self.line][self.position]
-        if keep_space and c == " ":
-            return c
-        elif c == " ":
-            return self.nextChar()
-        else:
-            return c
+        try:
+            c = self.input_lines[self.line][self.position]
+            if keep_space and c == " ":
+                return c
+            elif c == " ":
+                return self.nextChar()
+            else:
+                return c
+        except IndexError:
+            return None
 
     def nextChar(self):
         if self.position < len(self.input_lines[self.line]) - 1:

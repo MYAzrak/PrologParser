@@ -23,7 +23,6 @@ def parse_file(filename):
         return True  # File was found and parsed (regardless of errors)
 
     except FileNotFoundError:
-        print(f"File not found: {filename}")
         return False  # File was not found
 
 

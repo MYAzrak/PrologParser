@@ -8,15 +8,44 @@ class SyntaxAnalyzer:
         return
 
     def parse(self):
-        return self.program()
+        """Parse the entire program with error recovery"""
+        success = True
+        while self.lex.getChar():  # Continue while we have input
+            start_position = self.lex.getPosition()
+            
+            try:
+                if not self.program():
+                    success = False
+                    # Skip to next clause only if we haven't moved
+                    if self.lex.getPosition() == start_position:
+                        self.err.recover_to_next_clause()
+            except Exception as e:
+                success = False
+                self.err.syntax_error(str(e))
+                # Only recover if we haven't moved
+                if self.lex.getPosition() == start_position:
+                    self.err.recover_to_next_clause()
+            
+            # If we're at the same position after recovery, force advance
+            if self.lex.getPosition() == start_position:
+                if not self.lex.nextChar():
+                    break
+        
+        return success
 
     def program(self):
         """<program> -> <clause-list> <query> | <query>"""
-        # Try clause-list first
         save_position = self.lex.getPosition()
-        if self.clause_list():
-            if self.query():
-                return True
+        
+        # Try clause-list first
+        try:
+            if self.clause_list():
+                if self.query():
+                    return True
+        except Exception:
+            # Don't handle the exception here, let it propagate up
+            raise
+            
         # If that fails, restore position and try just query
         self.lex.setPosition(*save_position)
         return self.query()
@@ -31,7 +60,7 @@ class SyntaxAnalyzer:
         if self.clause():
             return self.clause_list()
         self.lex.setPosition(*save_position)
-        return True
+        return True   
 
     def clause(self):
         """<clause> -> <predicate> . | <predicate> :- <predicate-list> ."""
@@ -93,10 +122,10 @@ class SyntaxAnalyzer:
         if char == "(":
             self.lex.nextChar()
             if not self.term_list():
-                self.err.syntax_error("Expected term list after '('")
+                self.err.syntax_error("Expected term list after '(' in a predicate")
                 return False
             if self.lex.getChar() != ")":
-                self.err.syntax_error("Expected ')'")
+                self.err.syntax_error("Expected ')' after term list")
                 return False
             self.lex.nextChar()
         return True
@@ -145,7 +174,7 @@ class SyntaxAnalyzer:
             return False
 
         if self.lex.getChar() != ")":
-            self.err.syntax_error("Expected ')'")
+            self.err.syntax_error("Expected ')' after term list")
             return False
         self.lex.nextChar()
         return True
