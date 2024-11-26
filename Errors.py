@@ -14,7 +14,10 @@ class ErrorHandler:
             self.error_positions.add(current_pos)
             line_text = self.lex.getLine()
             pointer = ' ' * pos + '^'  # Create pointer at error position
-            self.errors.append(f"Syntax Error: {error} at {current_pos}\n{line_text}{pointer}")
+            
+            # Add newline only if the line doesn't already end with one
+            line_ending = '' if line_text.endswith('\n') else '\n'
+            self.errors.append(f"Syntax Error: {error} at {current_pos}\n{line_text}{line_ending}{pointer}")
 
     def report_errors(self):
         if not self.errors:
