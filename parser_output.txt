@@ -1,0 +1,72 @@
+
+Parsing 1.txt
+No errors found.
+
+Parsing 2.txt
+No errors found.
+
+Parsing 3.txt
+No errors found.
+
+Parsing 4.txt
+Errors:
+Syntax Error: Expected ')' after term list at (4, 35)
+move(N, From, To, Using) :- is(M, N-1), move(M, From, Using, To),
+                                   ^
+
+
+Parsing 5.txt
+Errors:
+Syntax Error: Expected predicate list after ':-' at (2, 20)
+factorial(N,A,F) :- A1 is N*A, N1 is N-1, factorial(N1,A1,F).
+                    ^
+
+
+Parsing 6.txt
+Errors:
+Syntax Error: Expected term list after '(' in a predicate at (0, 10)
+mergeSort([], []).
+          ^
+
+Syntax Error: Expected term list after '(' in a predicate at (1, 10)
+mergeSort([A], [A]).
+          ^
+
+Syntax Error: Expected term list after '(' in a predicate at (2, 10)
+mergeSort([A, B | Rest], S) :- divide([A, B | Rest], L1, L2),
+          ^
+
+Syntax Error: Expected term list after '(' in a predicate at (6, 7)
+divide([], [], []). divide([A], [A], []).
+       ^
+
+Syntax Error: Expected term list after '(' in a predicate at (6, 27)
+divide([], [], []). divide([A], [A], []).
+                           ^
+
+Syntax Error: Expected term list after '(' in a predicate at (7, 7)
+divide([A, B | R], [A | Ra], [B | Rb]) :- divide(R, Ra, Rb).
+       ^
+
+Syntax Error: Expected term list after '(' in a predicate at (8, 9)
+merge(A, [], A). merge([], B, B).
+         ^
+
+Syntax Error: Expected term list after '(' in a predicate at (8, 23)
+merge(A, [], A). merge([], B, B).
+                       ^
+
+Syntax Error: Expected term list after '(' in a predicate at (9, 6)
+merge([A | Ra], [B | Rb], [A | M]) :- A =< B, merge(Ra, [B | Rb], M).
+      ^
+
+Syntax Error: Expected term list after '(' in a predicate at (10, 6)
+merge([A | Ra], [B | Rb], [B | M]) :- A > B, merge([A | Ra], Rb, M).
+      ^
+
+Syntax Error: Expected term list after '(' in a predicate at (11, 13)
+?- mergeSort([3, 4, 8, 0, 1, 9, 5, 6], Sorted).
+             ^
+
+
+Parsing complete. Total files parsed: 6
