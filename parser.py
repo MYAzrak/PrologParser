@@ -1,27 +1,26 @@
 from enum import Enum, auto
 
-
 class Token(Enum):
     # Special characters
-    DOT = auto()  # .
-    COMMA = auto()  # ,
-    LPAREN = auto()  # (
-    RPAREN = auto()  # )
-    QUERY = auto()  # ?-
-    IMPLIES = auto()  # :-
-    QUOTE = auto()  # '
-
+    DOT = auto()          # .
+    COMMA = auto()        # ,
+    LPAREN = auto()       # (
+    RPAREN = auto()       # )
+    QUERY = auto()        # ?-
+    IMPLIES = auto()      # :-
+    QUOTE = auto()        # '
+    
     # Character types
-    LOWERCASE = auto()  # a-z
-    UPPERCASE = auto()  # A-Z, _
-    DIGIT = auto()  # 0-9
-    SPECIAL = auto()  # +, -, *, /, \, ^, ~, :, ., ?, #, $, &
-    SPACE = auto()  # space
-
+    LOWERCASE = auto()    # a-z
+    UPPERCASE = auto()    # A-Z, _
+    DIGIT = auto()        # 0-9
+    SPECIAL = auto()      # +, -, *, /, \, ^, ~, :, ., ?, #, $, &
+    SPACE = auto()        # space
+    
     # Other
-    EOF = auto()  # End of input
+    EOF = auto()          # End of input
     UNKNOWN = auto()
-
+    
     def __str__(self):
         return self.name
 
@@ -33,7 +32,7 @@ class LexicalAnalyzer:
         self.input_lines = program
         self.current_char = None
         self.current_token = None
-
+    
     def getChar(self, keep_space=False):
         """Returns the current character without consuming it"""
         try:
@@ -44,60 +43,60 @@ class LexicalAnalyzer:
             return c
         except IndexError:
             return None
-
+    
     def getCurrentChar(self):
         """Returns the actual character at current position"""
         return self.getChar(keep_space=True)
-
+    
     def getToken(self):
         """Returns the token enum for the current character"""
         char = self.getChar()
-
+        
         if char is None:
             return Token.EOF
-
+            
         if char.isspace():
             return Token.SPACE
-
+        
         if char.islower():
             return Token.LOWERCASE
-
-        if char.isupper() or char == "_":
+            
+        if char.isupper() or char == '_':
             return Token.UPPERCASE
-
+            
         if char.isdigit():
             return Token.DIGIT
-
+            
         # Check multi-character tokens first
-        if char == "?" and self.peekNext() == "-":
+        if char == '?' and self.peekNext() == '-':
             return Token.QUERY
-
-        if char == ":" and self.peekNext() == "-":
+            
+        if char == ':' and self.peekNext() == '-':
             return Token.IMPLIES
-
+            
         # Single character tokens
         token_map = {
-            ".": Token.DOT,
-            ",": Token.COMMA,
-            "(": Token.LPAREN,
-            ")": Token.RPAREN,
-            "'": Token.QUOTE,
+            '.': Token.DOT,
+            ',': Token.COMMA,
+            '(': Token.LPAREN,
+            ')': Token.RPAREN,
+            "'": Token.QUOTE
         }
-
+        
         if char in token_map:
             return token_map[char]
-
+            
         if char in "+-*/\\^~:.?# $&":
             return Token.SPECIAL
-
-        return Token.UNKNOWN
+            
+        return Token.UNKNOWN    
 
     def peekNext(self):
         """Look at next character without consuming current one"""
         if self.position + 1 < len(self.input_lines[self.line]):
             return self.input_lines[self.line][self.position + 1]
         return None
-
+    
     def nextChar(self):
         """Advance to next character and return it"""
         if self.position < len(self.input_lines[self.line]) - 1:
@@ -105,26 +104,25 @@ class LexicalAnalyzer:
         else:
             self.line += 1
             self.position = 0
-
+            
         if self.line >= len(self.input_lines):
             return None
-
+            
         char = self.getChar()
         if char == "\n":
             return self.nextChar()
-
+            
         return char
-
+    
     def getPosition(self):
         return self.line, self.position
-
+    
     def setPosition(self, line, position):
         self.line = line
         self.position = position
-
+    
     def getLine(self):
         return self.input_lines[self.line]
-
 
 class ErrorHandler:
     def __init__(self, lex):
@@ -141,13 +139,11 @@ class ErrorHandler:
         if current_pos not in self.error_positions:
             self.error_positions.add(current_pos)
             line_text = self.lex.getLine()
-            pointer = " " * pos + "^"  # Create pointer at error position
-
+            pointer = ' ' * pos + '^'  # Create pointer at error position
+            
             # Add newline only if the line doesn't already end with one
-            line_ending = "" if line_text.endswith("\n") else "\n"
-            self.errors.append(
-                f"Syntax Error: {error} at {current_pos}\n{line_text}{line_ending}{pointer}"
-            )
+            line_ending = '' if line_text.endswith('\n') else '\n'
+            self.errors.append(f"Syntax Error: {error} at {current_pos}\n{line_text}{line_ending}{pointer}")
 
     def report_errors(self):
         if not self.errors:
@@ -160,7 +156,7 @@ class ErrorHandler:
 
     def has_errors(self):
         return len(self.errors) > 0
-
+    
     def recover_to_next_clause(self):
         """
         Skip tokens until we reach a recovery point ('.') and position ourselves
@@ -170,32 +166,31 @@ class ErrorHandler:
         # Keep track of starting position to ensure we make progress
         start_position = self.lex.getPosition()
         found_period = False
-
+        
         while self.lex.getChar():
             if self.lex.getChar() == ".":
                 found_period = True
                 self.lex.nextChar()  # Consume the period
                 break
             self.lex.nextChar()
-
+            
         # If we didn't find a period and didn't move, force advance
         if not found_period and self.lex.getPosition() == start_position:
             self.lex.nextChar()
-
+            
         return bool(self.lex.getChar())
-
 
 class SyntaxAnalyzer:
     def __init__(self, lexical: LexicalAnalyzer, error: ErrorHandler):
         self.lex = lexical
         self.err = error
-
+    
     def parse(self):
         """Parse the entire program with error recovery"""
         success = True
         while self.lex.getToken() != Token.EOF:
             start_position = self.lex.getPosition()
-
+            
             try:
                 if not self.program():
                     success = False
@@ -206,17 +201,17 @@ class SyntaxAnalyzer:
                 self.err.syntax_error(str(e))
                 if self.lex.getPosition() == start_position:
                     self.err.recover_to_next_clause()
-
+            
             if self.lex.getPosition() == start_position:
                 if not self.lex.nextChar():
                     break
-
+        
         return success
 
     def program(self):
         """<program> -> <clause-list> <query> | <query>"""
         save_position = self.lex.getPosition()
-
+        
         # Try clause-list first
         try:
             if self.clause_list():
@@ -225,7 +220,7 @@ class SyntaxAnalyzer:
         except Exception:
             # Don't handle the exception here, let it propagate up
             raise
-
+            
         # If that fails, restore position and try just query
         self.lex.setPosition(*save_position)
         return self.query()
@@ -310,13 +305,13 @@ class SyntaxAnalyzer:
         """<clause-list> -> <clause> | <clause> <clause-list>"""
         if not self.clause():
             return False
-
+        
         # Look ahead to see if there's another clause
         save_position = self.lex.getPosition()
         if self.clause():
             return self.clause_list()
         self.lex.setPosition(*save_position)
-        return True
+        return True   
 
     def predicate_list(self):
         """<predicate-list> -> <predicate> | <predicate> , <predicate-list>"""
@@ -343,19 +338,19 @@ class SyntaxAnalyzer:
     def term(self):
         """<term> -> <atom> | <variable> | <structure> | <numeral>"""
         save_position = self.lex.getPosition()
-
+        
         # Try atom first (which might be part of a structure)
         if self.atom():
             if self.lex.getToken() == Token.LPAREN:  # This is actually a structure
                 self.lex.setPosition(*save_position)
                 return self.structure()
             return True
-
+            
         # Reset and try variable
         self.lex.setPosition(*save_position)
         if self.variable():
             return True
-
+            
         # Reset and try numeral
         self.lex.setPosition(*save_position)
         return self.numeral()
@@ -443,14 +438,14 @@ class SyntaxAnalyzer:
     def alphanumeric(self):
         """<alphanumeric> -> <lowercase-char> | <uppercase-char> | <digit>"""
         save_position = self.lex.getPosition()
-
+        
         if self.lowercase_char():
             return True
-
+            
         self.lex.setPosition(*save_position)
         if self.uppercase_char():
             return True
-
+            
         self.lex.setPosition(*save_position)
         return self.digit()
 
@@ -463,8 +458,7 @@ class SyntaxAnalyzer:
         if self.numeral():
             return True
         self.lex.setPosition(*save_position)
-        return True
-
+        return True 
 
 def parse_file(filename):
     try:
@@ -488,31 +482,26 @@ def parse_file(filename):
     except FileNotFoundError:
         return False  # File was not found
 
-
 # copied from https://stackoverflow.com/questions/14906764/how-to-redirect-stdout-to-both-file-and-console-with-scripting
 # to redirect print to both stdout and console
 import sys
-
 
 class Logger(object):
     def __init__(self):
         self.terminal = sys.stdout
         self.log = open("parser_output.txt", "w")
-
+   
     def write(self, message):
         self.terminal.write(message)
-        self.log.write(message)
+        self.log.write(message)  
 
     def flush(self):
         # this flush method is needed for python 3 compatibility.
         # this handles the flush command by doing nothing.
         # you might want to specify some extra behavior here.
-        pass
-
+        pass    
 
 sys.stdout = Logger()
-
-
 def main():
     program_num = 1
     files_parsed = 0
